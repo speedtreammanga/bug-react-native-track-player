@@ -1,4 +1,12 @@
 {
   "name": "poc-test-audio",
-  "slug": "poc-test-audio"
+  "slug": "poc-test-audio",
+  "ios": {
+    "bundleIdentifier": "com.fournier.afa.poc-test-audio",
+    "infoPlist": {
+      "UIBackgroundModes": [
+        "audio"
+      ]
+    }
+  }
 }
