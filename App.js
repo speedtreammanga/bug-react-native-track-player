@@ -1,13 +1,11 @@
 import { Video } from "expo-av";
 import { useEffect, useMemo } from "react";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
 import {
-  Animated,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+  useAudioPlayer,
+  setAudioModeAsync,
+  useAudioPlayerStatus,
+} from "expo-audio";
 import TrackPlayer, {
   useIsPlaying,
   Capability,
@@ -103,50 +101,40 @@ async function addTrack() {
 
 export default function App() {
   const opacity = useMemo(() => new Animated.Value(0), []);
-  const isPlaying = useIsPlaying();
-  const track = useActiveTrack();
-  const progress = useProgress(250);
+  const player = useAudioPlayer();
+  const status = useAudioPlayerStatus(player);
 
   useEffect(() => {
     async function setup() {
+      console.log("setAudioModeAsync()");
+      await setAudioModeAsync({
+        allowsRecording: false,
+        interruptionMode: "doNotMix",
+        interruptionModeAndroid: "doNotMix",
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        shouldRouteThroughEarpiece: true,
+      });
       await SetupPlayer();
-      // await addTrack(); // NOTE: Uncomment to load a track before initial user request to play track, loading an initial track before
     }
     setup();
   }, []);
 
-  const handlePlayAsTrackButtonPress = async () => {
-    console.log("play as TRACK btn press");
-    await TrackPlayer.load({
-      ...track1,
-      id: "0001",
-      isLiveStream: false,
-    });
-    handleButtonPress();
-  };
-
-  const handlePlayAsLiveButtonPress = async () => {
-    console.log("play as LIVE btn press");
-    await TrackPlayer.load({
-      ...track1,
-      id: "0002",
-      isLiveStream: true,
-    });
-    handleButtonPress();
-  };
-
   const handleButtonPress = () => {
-    isPlaying.playing ? handlePause() : handlePlay();
+    console.log("play as TRACK btn press");
+    player.replace({ uri: track1.url });
+    player.loop = true;
+    player.playing ? handlePause() : handlePlay();
   };
 
   const handlePlay = () => {
     console.log("> handlePlay()");
-    TrackPlayer.play();
+    player.play();
   };
 
   const handlePause = () => {
     console.log("> handlePause()");
-    TrackPlayer.pause();
+    player.pause();
   };
 
   return (
@@ -185,6 +173,7 @@ export default function App() {
             // height: "100%",
             padding: 20,
             paddingBottom: 60,
+            marginVertical: "auto",
           }}
         >
           <View
@@ -194,54 +183,36 @@ export default function App() {
               gap: 12,
               alignContent: "center",
               justifyContent: "flex-start",
-              marginBottom: 50,
-              marginTop: 90,
+              // marginBottom: 50,
+              // marginTop: 90,
+              marginVertical: "auto",
             }}
           >
             <Image
               src={track1.artwork}
-              width={300}
-              height={300}
+              width={150}
+              height={150}
               style={{ margin: "auto", borderRadius: 20, marginBottom: 0 }}
             />
             <Text style={styles.text}>
               {track1.title} - {track1.artist}
             </Text>
-            <Text style={styles.text}>
+            {/* <Text style={styles.text}>
               Mode: {track ? (track.isLiveStream ? "Live" : "Track") : "n/a"}
-            </Text>
-            <Text style={styles.text}>Id: {track ? track["id"] : "n/a"}</Text>
+            </Text> */}
+            {/* <Text style={styles.text}>Id: {track ? track["id"] : "n/a"}</Text> */}
             <Text style={styles.text}>
-              {progress.position.toFixed(2)} : {progress.duration.toFixed(2)}
+              {status.currentTime.toFixed(2)} : {status.duration.toFixed(2)}
             </Text>
           </View>
-          {!isPlaying.playing && (
-            <View
-              style={{
-                display: "flex",
-                gap: 8,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Button
-                color={"dark"}
-                label={"Play as Track"}
-                onPress={handlePlayAsTrackButtonPress}
-              />
-              <Button
-                color={"dark"}
-                label={"Play as Live"}
-                onPress={handlePlayAsLiveButtonPress}
-              />
-            </View>
+          {!status.playing && (
+            <Button color={"dark"} label={"Play"} onPress={handleButtonPress} />
           )}
-          {isPlaying.playing && (
+          {status.playing && (
             <Button
               color={"light"}
-              label={`Pause (${track.isLiveStream ? "Live" : "Track"})`}
-              onPress={TrackPlayer.pause}
+              label={"Pause"}
+              onPress={() => player.pause()}
             />
           )}
         </View>

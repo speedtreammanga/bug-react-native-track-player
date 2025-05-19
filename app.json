@@ -1,6 +1,8 @@
 {
   "name": "poc-test-audio",
   "slug": "poc-test-audio",
+  "orientation": "portrait",
+  "newArchEnabled": true,
   "ios": {
     "bundleIdentifier": "com.fournier.afa.poc-test-audio",
     "infoPlist": {
@@ -8,5 +10,8 @@
         "audio"
       ]
     }
-  }
+  },
+  "plugins": [
+    "expo-audio"
+  ]
 }
